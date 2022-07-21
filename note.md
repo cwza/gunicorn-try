@@ -1,12 +1,13 @@
-## Different Type of Program
-* CPU-Block program(ex: infinity loop), IO-Block program(ex: read file, HTTP, database connect)
-* Concurrency on cpu-blocked: Multi-Processing, Multi-Threading
-* Concurrency on io-blocked: Async (You can also combine this with Multi-Processing, Multi-Threading)
+## Different Type of program
+* CPU-Intensive program(ex: infinity loop), IO-Intensive program(ex: read file, HTTP, database connect)
+* Concurrency on cpu-intensive task: Multi-Processing, Multi-Threading
+* Concurrency on io-intensive task: Async (You can also combine this with Multi-Processing, Multi-Threading)
 
 ## Gunicorn Basic
-* Master - Worker Architecture to achive multi processing
-* One worker will fork one process
+* One master forks multiple workers
+* One worker equals one process
 * Master(Arbiter) maintain the workers processes, It launches or kills them if needed
+* Your app will be loaded into memory each time the worker be forked
 * There are some different type of worker: sync, gthread, gevent... worker
 * gthread: easy to use multi-threading library, gevent: easy to use async library
 
@@ -20,8 +21,8 @@
 
 ## Graceful Shutdown
 * graceful_timeout: Timeout for graceful workers restart.
-* when worker receive SIGTERM, it will set self.alive = False to not handle any request but only handle the current request untill graceful_timeout
-* when master receive SIGTERM, it will send SIGTERM to all of the workers
+* when worker receive SIGTERM, it will set self.alive = False to not handle any request and continuously handle the current request until graceful_timeout
+* when master receive SIGTERM, it will send SIGTERM to all of the workers and kill the worker after graceful_timeout
 * after the worker be killed, master will fork another worker to serve the new request
 
 ## Timeout
@@ -34,7 +35,7 @@
 * 當worker收到graceful-timeout通知以後, 還可以接客ㄇ
 * 如果我ㄉworker是1, 然後當下的worker timeout了, 我是不是就不能收request了
     + 只要master還在都能收request, 只是沒worker可以處理時這個request會block在那邊等待worker來處理它
-    + 詳情請洽tcp backlog
+    + tcp backlog
 * 什麼時候會送timeout
     + 當你的worker被cpu block的request block超過timeout, 或者是你的app啟動時不管是cpu-block還是io-block超過timeout都會重啟
     + master在每次fork worker後run worker前都會重新把我們的app load進來, 所以如果你的app啟動時間大於timeout, worker就會在run之前被timeout
